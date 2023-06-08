@@ -8,11 +8,11 @@ class AuthorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Author
-        fields = ['id', 'lastname', 'firstname', 'affiliation', 'email', 'orcid', 'abstracts']
+        fields = ['id', 'lastname', 'firstname', 'affiliation', 'email', 'orcid', 'abstracts', 'main_author']
 
 
 class AuthorSlimSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Author
-        fields = ['id', 'lastname', 'firstname', 'affiliation', 'orcid']
+        fields = ['id', 'lastname', 'firstname', 'affiliation', 'orcid', 'main_author']

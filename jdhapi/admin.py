@@ -73,7 +73,7 @@ class CallOfPaperAdmin(ExportActionMixin, admin.ModelAdmin):
 
 @admin.register(Author)
 class AuthorAdmin(ExportActionMixin, admin.ModelAdmin):
-    list_display = ['lastname', 'firstname', 'affiliation', 'orcid', 'email']
+    list_display = ['lastname', 'firstname', 'affiliation', 'orcid', 'email', 'main_author']
 
 
 @admin.register(Issue)

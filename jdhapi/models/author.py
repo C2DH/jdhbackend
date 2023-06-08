@@ -11,7 +11,9 @@ class Author(models.Model):
     firstname = models.CharField(max_length=50)
     orcid = models.CharField(max_length=50, null=True, blank=True)
     affiliation = models.CharField(max_length=250)
-
+    # a flag for the main author of the publication
+    main_author = models.BooleanField(default=False)
+    
     class Meta:
         ordering = ['lastname']
 
