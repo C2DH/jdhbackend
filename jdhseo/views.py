@@ -1,4 +1,5 @@
 import base64
+import datetime
 import logging
 import requests
 import os
@@ -214,9 +215,13 @@ def GetIssueContent_from_url(url, pid):
             status=Article.Status.PUBLISHED)
     except Article.DoesNotExist:
         raise Http404("Article does not exist")
-    # filename = get_publisher_id(article.doi).lower()
+    filename = get_publisher_id(article.doi).lower()
+    logger.debug(f"filename {filename}")
     filename_issue = "/issue-files/jdh.2022.2.issue-1.xml"
-    filename_zip = "jdh.2022.2.issue-1.zip"
+    # filename_zip: jdh_{filename}_oi_YYYY-MM-DD--HH-MM-SS.zip
+    today = datetime.datetime.now()
+    filename_zip = f"jdh_{filename}_oi_{today.strftime('%Y-%m-%d--%H-%M-%S')}.zip"
+    logger.debug(f"filename_zip {filename_zip}")
     return response.content, filename_issue, filename_zip
 
 
