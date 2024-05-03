@@ -200,9 +200,9 @@ def GetArticleContent_from_url(url, pid):
     path = urlparse(url).path
     ext = os.path.splitext(path)[1]
     if ext == '.pdf':
-        filename = f"/{filename}/{filename}.pdf"
+        filename = f"{filename}.open-issue/{filename}/{filename}.pdf"
     else:
-        filename = f"/{filename}/{filename}.xml"
+        filename = f"{filename}.open-issue/{filename}/{filename}.xml"
     return response.content, filename
 
 
