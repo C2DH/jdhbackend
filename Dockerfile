@@ -1,4 +1,4 @@
-FROM python:3.8.0-alpine
+FROM python:3.12.2-alpine
 WORKDIR /journal-of-digital-history-backend
 
 ARG GIT_TAG
@@ -54,6 +54,7 @@ COPY dashboard ./dashboard
 COPY schema ./schema
 COPY dbconnection.py .
 COPY manage.py .
+COPY .env .env
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt
