@@ -1,5 +1,6 @@
 from django.urls import path, include
 from jdhapi import views
+from jdhapi import feeds
 from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework.routers import DefaultRouter
 from rest_framework import routers
@@ -25,5 +26,8 @@ urlpatterns = [
     path('api/tags/<int:pk>/', views.TagDetail.as_view(), name='tag-detail'),
     path('api/callofpaper/', views.CallOfPaperList.as_view(), name='callofpaper-list'),
     path('api/callofpaper/<str:folder_name>/', views.CallOfPaperDetail.as_view(), name='callofpaper-detail'),
+    # feeds
+    path('api/feeds/articles/', feeds.LatestArticleFeed()),
+
 ]
 urlpatterns = format_suffix_patterns(urlpatterns)
