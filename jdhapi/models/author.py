@@ -1,8 +1,6 @@
 from django.db import models
-from django.conf import settings
-from django.utils import timezone
+
 from django_countries.fields import CountryField
-import shortuuid
 
 
 class Author(models.Model):

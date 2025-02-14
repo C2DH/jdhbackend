@@ -2,7 +2,7 @@ from django.apps import AppConfig
 
 
 class JdhapiConfig(AppConfig):
-    name = 'jdhapi'
+    name = "jdhapi"
 
     def ready(self):
         import jdhapi.signals

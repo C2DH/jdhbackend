@@ -1,7 +1,4 @@
 from django.db import models
-from django.conf import settings
-from django.utils import timezone
-import shortuuid
 
 
 class Dataset(models.Model):
@@ -11,4 +8,3 @@ class Dataset(models.Model):
 
     def __str__(self):
         return self.url
-
