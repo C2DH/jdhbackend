@@ -166,6 +166,7 @@ class ArticleAdmin(admin.ModelAdmin):
         "issue",
         "abstract_title",
         "status",
+        "publication_date",
         "clickable_dataverse_url",
     ]
     list_filter = (
