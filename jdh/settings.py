@@ -23,16 +23,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_env_variable("SECRET_KEY")
+SECRET_KEY = get_env_variable("SECRET_KEY", "default-secret-key-for-testing")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = get_env_variable("DEBUG", "True")
 
 DJANGO_LOG_LEVEL = get_env_variable("DJANGO_LOG_LEVEL", "DEBUG")
 
-ALLOWED_HOSTS = get_env_variable("ALLOWED_HOSTS", "localhost").split(",")
+ALLOWED_HOSTS = get_env_variable("ALLOWED_HOSTS", "").split(",")
 
-DRF_RECAPTCHA_SECRET_KEY = get_env_variable("DRF_RECAPTCHA_SECRET_KEY")
+DRF_RECAPTCHA_SECRET_KEY = get_env_variable(
+    "DRF_RECAPTCHA_SECRET_KEY", "default-recaptacha-secret-key"
+)
 
 
 # Application definition
@@ -45,12 +47,13 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "dashboard.apps.DashboardConfig",
-    "rest_framework",
+    "import_export",
     "jdhapi.apps.JdhapiConfig",
     "jdhseo.apps.JdhseoConfig",
     "jdhtasks.apps.JdhtasksConfig",
-    # to use Bootsrap
+    "rest_framework",
     "crispy_forms",
+    "crispy_bootstrap4",
     "drf_recaptcha",
     "django_filters",
     "django_countries",

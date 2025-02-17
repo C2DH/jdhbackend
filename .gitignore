@@ -4,6 +4,7 @@ __pycache__
 .DS_Store
 jdhapi/test/shell.py
 jdhapi/test/test-httpie.py
+
 # env files
 .venv
 .env

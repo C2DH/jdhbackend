@@ -4,7 +4,7 @@ import logging
 import base64
 import qrcode
 import requests
-import json
+
 from io import BytesIO
 from citeproc import formatter
 from citeproc import Citation
@@ -16,55 +16,56 @@ from django.utils.html import strip_tags
 from requests.exceptions import HTTPError
 from requests.structures import CaseInsensitiveDict
 from django.conf import settings  # import the settings file
+
 logger = logging.getLogger(__name__)
 
 
 def getAuthorDateFromReference(ref):
-    year = ''
+    year = ""
     author = None
     editor = None
-    if ref.get('issued', None) is not None:
-        if ref.get('issued').get('year', None) is not None:
-            year = ref['issued']['year']
-        elif ref.get('issued').get('literal', None) is not None:
-            year = ref['issued']['literal']
-    elif ref.get('accessed', None) is not None:
-        if ref.get('accessed').get('year', None) is not None:
-            year = ref['accessed']['year']
-    if isinstance(ref.get('author', None), list):
-        authors = [x['family'] for x in ref['author']]
+    if ref.get("issued", None) is not None:
+        if ref.get("issued").get("year", None) is not None:
+            year = ref["issued"]["year"]
+        elif ref.get("issued").get("literal", None) is not None:
+            year = ref["issued"]["literal"]
+    elif ref.get("accessed", None) is not None:
+        if ref.get("accessed").get("year", None) is not None:
+            year = ref["accessed"]["year"]
+    if isinstance(ref.get("author", None), list):
+        authors = [x["family"] for x in ref["author"]]
         # TODO
         # it is possible to limit the number of authors, add "et al."
-        author = ', '.join(authors)
-    if isinstance(ref.get('editor', None), list):
-        editors = [x['family'] for x in ref['editor']]
-        editor = ', '.join(editors)
+        author = ", ".join(authors)
+    if isinstance(ref.get("editor", None), list):
+        editors = [x["family"] for x in ref["editor"]]
+        editor = ", ".join(editors)
     if author is None and editor is not None:
-        return f'*{editor} {year}*'
+        return f"*{editor} {year}*"
     if editor is None and author is not None:
-        return f'*{author} {year}*'
+        return f"*{author} {year}*"
     if editor is not None and author is not None:
-        return f'*{author} {year}*'
+        return f"*{author} {year}*"
     else:
-        if ref.get('container-title', None) is not None:
-            container = ref['container-title']
-            return f'*{container} {year}*'
+        if ref.get("container-title", None) is not None:
+            container = ref["container-title"]
+            return f"*{container} {year}*"
 
 
 def getReferencesFromJupyterNotebook(notebook):
-    metadata = notebook.get('metadata')
+    metadata = notebook.get("metadata")
     references = []
     bibliography = []
-    filterReferences = []
     inline_references_table = dict()
     try:
-        references = metadata.get('cite2c').get('citations')
+        cite2c = metadata.get("cite2c", {})
+        references = cite2c.get("citations", {})
         # logger.info("Loging references ---> {0}".format(references))
         bib_source = CiteProcJSON(references.values())
         bib_style = CitationStylesStyle(
-            'jdhseo/styles/modern-language-association.csl', validate=False)
-        bib = CitationStylesBibliography(
-            bib_style, bib_source, formatter.html)
+            "jdhseo/styles/modern-language-association.csl", validate=False
+        )
+        bib = CitationStylesBibliography(bib_style, bib_source, formatter.html)
         # register citation
         for key, entry in bib_source.items():
             # exclude  "undefined" due to bug cite2c
@@ -79,11 +80,15 @@ def getReferencesFromJupyterNotebook(notebook):
         pass
     # caseless matching
     # return references, sorted(bibliography, key=str.casefold), inline_references_table
-    return references, sorted(bibliography, key=lambda x: re.sub('[^A-Za-z]+', '', x).lower()), inline_references_table
+    return (
+        references,
+        sorted(bibliography, key=lambda x: re.sub("[^A-Za-z]+", "", x).lower()),
+        inline_references_table,
+    )
 
 
 def parseJupyterNotebook(notebook, merged_authors_affiliations):
-    cells = notebook.get('cells')
+    cells = notebook.get("cells")
     title = []
     abstract = []
     disclaimer = []
@@ -95,7 +100,7 @@ def parseJupyterNotebook(notebook, merged_authors_affiliations):
     def formatInlineCitations(m):
         parsed_ref = refs.get(m[1], None)
         if parsed_ref is None:
-            return f'{m[1]}'
+            return f"{m[1]}"
         return parsed_ref
 
     # Build contributor array based on merged_authors_affiliations
@@ -112,43 +117,45 @@ def parseJupyterNotebook(notebook, merged_authors_affiliations):
     num = 0
     for cell in cells:
         # check cell metadata
-        tags = cell.get('metadata', {}).get('tags', [])
-        source = ''.join(cell.get('source', ''))
+        tags = cell.get("metadata", {}).get("tags", [])
+        source = "".join(cell.get("source", ""))
         source = re.sub(
-            r'<cite\s+data-cite=.([/\dA-Z]+).>([^<]*)</cite>',
-            formatInlineCitations, source)
-        if 'hidden' in tags or 'contributor' in tags:
+            r"<cite\s+data-cite=.([/\dA-Z]+).>([^<]*)</cite>",
+            formatInlineCitations,
+            source,
+        )
+        if "hidden" in tags or "contributor" in tags:
             continue
-        if 'title' in tags:
+        if "title" in tags:
             title.append(marko.convert(source))
-        elif 'abstract' in tags:
+        elif "abstract" in tags:
             abstract.append(marko.convert(source))
-        elif 'disclaimer' in tags:
+        elif "disclaimer" in tags:
             disclaimer.append(marko.convert(source))
-        elif 'collaborators' in tags:
+        elif "collaborators" in tags:
             collaborators.append(marko.convert(source))
-        elif 'keywords' in tags:
+        elif "keywords" in tags:
             keywords.append(marko.convert(source))
         else:
-            if cell.get('cell_type') == 'markdown':
+            if cell.get("cell_type") == "markdown":
                 num = num + 1
                 paragraphs.append({"num": num, "source": marko.convert(source)})
-            elif cell.get('cell_type') == 'code':
+            elif cell.get("cell_type") == "code":
                 num = num + 1
                 paragraphs.append({"numCode": num, "code": marko.convert(source)})
-    logger.info(f"contributors {contributor}")
+    # logger.info(f"contributors {contributor}")
     return {
-        'title': title,
-        'title_plain': strip_tags(''.join(title)).strip(),
-        'abstract': abstract,
-        'abstract_plain': strip_tags(''.join(abstract)).strip(),
-        'contributor': contributor,
-        'disclaimer': disclaimer,
-        'paragraphs': paragraphs,
-        'collaborators': collaborators,
-        'keywords': keywords,
-        'references': references,
-        'bibliography': bibliography
+        "title": title,
+        "title_plain": strip_tags("".join(title)).strip(),
+        "abstract": abstract,
+        "abstract_plain": strip_tags("".join(abstract)).strip(),
+        "contributor": contributor,
+        "disclaimer": disclaimer,
+        "paragraphs": paragraphs,
+        "collaborators": collaborators,
+        "keywords": keywords,
+        "references": references,
+        "bibliography": bibliography,
     }
 
 
@@ -156,26 +163,23 @@ def getPlainMetadataFromArticle(article):
     # Given an `Article` instance,
     # get a dict cotaining flatten down metadata for the
     # article: title, contributors etc.
-    title = marko.convert(''.join(article.data.get('title', '')))
-    abstract = marko.convert(''.join(article.data.get('abstract', '')))
-    contributor = marko.convert(''.join(article.data.get('contributor', '')))
+    title = marko.convert("".join(article.data.get("title", "")))
+    abstract = marko.convert("".join(article.data.get("abstract", "")))
+    contributor = marko.convert("".join(article.data.get("contributor", "")))
     return {
-        'pid': article.abstract.pid,
-        'contributor': strip_tags(contributor).strip(),
-        'title': strip_tags(title).strip(),
-        'abstract': strip_tags(abstract).strip(),
-        'keywords': article.data.get('keywords', []),
-        'data': article.data
+        "pid": article.abstract.pid,
+        "contributor": strip_tags(contributor).strip(),
+        "title": strip_tags(title).strip(),
+        "abstract": strip_tags(abstract).strip(),
+        "keywords": article.data.get("keywords", []),
+        "data": article.data,
     }
 
 
 def generate_qrcode(pid):
     buffer = BytesIO()
     input_data = "https://journalofdigitalhistory.org/en/article/"
-    qr = qrcode.QRCode(
-        version=1,
-        box_size=10,
-        border=5)
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
 
     qr.add_data(input_data + pid)
     qr.make(fit=True)
@@ -203,9 +207,10 @@ def get_affiliation(orcid):
         logger.debug("END get_affiliation- call API ORCID")
         return affiliation
     except HTTPError as http_err:
-        logger.error(f'HTTP error occurred: {http_err}')
+        logger.error(f"HTTP error occurred: {http_err}")
     except Exception as err:
-        logger.error(f'Other error occurred: {err}')
+        logger.error(f"Other error occurred: {err}")
+
 
 def get_employment_affiliation(orcid, api_url, headers):
     url = f"{api_url}/{orcid}/employments"
@@ -214,11 +219,12 @@ def get_employment_affiliation(orcid, api_url, headers):
     json_response = resp.json()
     if json_response["affiliation-group"]:
         for summaries in json_response["affiliation-group"]:
-            for summary in summaries['summaries']:
-                if summary['employment-summary']['end-date'] is None:
-                    last = summary['employment-summary']['organization']
+            for summary in summaries["summaries"]:
+                if summary["employment-summary"]["end-date"] is None:
+                    last = summary["employment-summary"]["organization"]
                     return f"{last['address']['city']} - {last['address']['country']}"
     return None
+
 
 def get_education_affiliation(orcid, api_url, headers):
     url = f"{api_url}/{orcid}/educations"
@@ -227,11 +233,12 @@ def get_education_affiliation(orcid, api_url, headers):
     json_response = resp.json()
     if json_response["affiliation-group"]:
         for summaries in json_response["affiliation-group"]:
-            for summary in summaries['summaries']:
-                if summary['education-summary']['end-date'] is None:
-                    last = summary['education-summary']['organization']
+            for summary in summaries["summaries"]:
+                if summary["education-summary"]["end-date"] is None:
+                    last = summary["education-summary"]["organization"]
                     return f"{last['address']['city']} - {last['address']['country']}"
     return None
+
 
 def merge_authors_affiliations(authors, affiliations):
     """
@@ -247,18 +254,16 @@ def merge_authors_affiliations(authors, affiliations):
     merged_list = []
     for author in authors:
         for affiliation in affiliations:
-            if author['aff_id'] == affiliation['aff_id']:
+            if author["aff_id"] == affiliation["aff_id"]:
                 merged_info = {
-                    'given_names': author['given_names'],
-                    'surname': author['surname'],
-                    'orcid': author['orcid'],
-                    'institution': affiliation['institution'],
-                    'city': affiliation['city'],
-                    'country': affiliation['country'],
-                    'country_name': affiliation['country_name']
+                    "given_names": author["given_names"],
+                    "surname": author["surname"],
+                    "orcid": author["orcid"],
+                    "institution": affiliation["institution"],
+                    "city": affiliation["city"],
+                    "country": affiliation["country"],
+                    "country_name": affiliation["country_name"],
                 }
                 merged_list.append(merged_info)
                 break
     return merged_list
-
-

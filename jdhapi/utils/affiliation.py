@@ -39,6 +39,7 @@ def get_authors(article_authors, affiliations):
         # logger.debug(f'authors {authors}')
     return authors
 
+
 def get_affiliation_from_orcid(orcid_url, affiliation):
     """
     Retrieve the affiliation details from ORCID.
@@ -69,6 +70,7 @@ def get_affiliation_from_orcid(orcid_url, affiliation):
     logger.debug(f"No affiliation found in ORCID for author {orcid}")
     return None
 
+
 def check_database_for_affiliation(author_id):
     """
     Check the database for an affiliation for the given author ID.
@@ -82,9 +84,7 @@ def check_database_for_affiliation(author_id):
     try:
         author = Author.objects.get(id=author_id)
         if author.city and author.country:
-            logger.debug(
-                f"Affiliation found in DB for author {author.lastname}"
-            )
+            logger.debug(f"Affiliation found in DB for author {author.lastname}")
             affiliation = {
                 "institution": author.affiliation,
                 "city": author.city,
@@ -102,7 +102,6 @@ def check_database_for_affiliation(author_id):
         return None
 
 
-
 def get_affiliation_json_one(author_id, orcid_url, affiliation):
     """
     Retrieve the affiliation details for an author based on ORCID URL or database information.
@@ -115,7 +114,7 @@ def get_affiliation_json_one(author_id, orcid_url, affiliation):
     Returns:
         dict: A dictionary containing the affiliation details.
     """
-    logger.debug('START get_affiliation_json_one')
+    logger.debug("START get_affiliation_json_one")
 
     # Check in the database if there is an affiliation
     db_affiliation = check_database_for_affiliation(author_id)
@@ -130,9 +129,9 @@ def get_affiliation_json_one(author_id, orcid_url, affiliation):
     # Return default affiliation if no answer from ORCID URL
     default_affiliation = {
         "institution": affiliation,
-        "city": "NOT FOUND",
-        "country": "NOT FOUND",
-        "country_name": "NOT FOUND"
+        "city": "not available",
+        "country": "not available",
+        "country_name": "not available",
     }
     return default_affiliation
 
@@ -201,7 +200,7 @@ def get_affiliation_json(authors, publisher_id):
                     publisher_id, affiliation_one["aff_id"]
                 )
                 affiliations.append(affiliation_one)
-    # logger.info(f'affiliations: {affiliations}')
+    # logger.info(f"affiliations: {affiliations}")
     return affiliations
 
 
@@ -210,25 +209,25 @@ def is_default_affiliation(affiliations):
     Checks if any affiliation in the list has default values.
 
     This function iterates through a list of affiliations and checks if any
-    affiliation has "NOT FOUND" as the value for the keys "city", "country",
-    or "country_name". If any of these keys have the value "NOT FOUND", the
+    affiliation has "not available" as the value for the keys "institution", "city", "country",
+    or "country_name". If any of these keys have the value "not available", the
     function returns True, indicating that the affiliation has default values.
 
     Args:
         affiliations (list of dict): A list of affiliation dictionaries, where
-                                     each dictionary contains keys "city",
+                                     each dictionary contains keys "institution", "city",
                                      "country", and "country_name".
 
     Returns:
-        bool: True if any affiliation has "NOT FOUND" as the value for "city",
+        bool: True if any affiliation has "not available" as the value for "institution", "city",
               "country", or "country_name". False otherwise.
     """
     for affiliation in affiliations:
-        # if in the affiliation the city is NOT FOUND  or country is NOT FOUND or country_name is NOT FOUND return True
-        if (
-            affiliation["city"] == "NOT FOUND"
-            or affiliation["country"] == "NOT FOUND"
-            or affiliation["country_name"] == "NOT FOUND"
+
+        if affiliation["institution"] == "not available" and (
+            affiliation["city"] == "not available"
+            or affiliation["country"] == "not available"
+            or affiliation["country_name"] == "not available"
         ):
             return True
     return False

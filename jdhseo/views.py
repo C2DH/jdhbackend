@@ -68,7 +68,7 @@ def ArticleDetail(request, pid):
         authors = article_xml.authors
         affiliations = article_xml.affiliations
         merged_authors_affiliations = merge_authors_affiliations(authors, affiliations)
-        logger.info(f"merged_authors_affiliations {merged_authors_affiliations}")
+        # logger.info(f"merged_authors_affiliations {merged_authors_affiliations}")
 
     except Http404 as e:
         raise Http404(f"Error initializing ArticleXml: {str(e)}")
